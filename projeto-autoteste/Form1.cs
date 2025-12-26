@@ -8,18 +8,18 @@ namespace projeto_autoteste
 {
     public partial class Form1 : Form
     {
-        // 📂 Pasta base das suites
-        string pastaBase = @"C:\AutomacaoTestes\Suites";
-
         // ⚙️ Caminho do AutoIt
         string autoItExe = @"C:\Program Files (x86)\AutoIt3\AutoIt3.exe";
+
+        // 📂 Pasta base das suites agora dinâmica
+        string pastaBase => TxtDiretorio.Text;
 
         public Form1()
         {
             InitializeComponent();
             CarregarAmbientes();
+            TxtDiretorio.Text = @"C:\AutomacaoTestes\Suites"; // valor padrão
         }
-
         // ================= LOG =================
         void Log(string message, Color? color = null)
         {
@@ -31,7 +31,7 @@ namespace projeto_autoteste
             txtLog.ScrollToCaret();
         }
 
-        // ============ AMBIENTES ============
+        // ============ AMBIENTES ============        
         void CarregarAmbientes()
         {
             cmbEnvironment.Items.Clear();
@@ -44,13 +44,27 @@ namespace projeto_autoteste
             cmbEnvironment.SelectedIndex = 0;
         }
 
-        // ============ CARREGAR SUITES ============
+        // ============ SELECIONAR DIRETÓRIO ============        
+        private void btnSelecionarDiretorio_Click(object sender, EventArgs e)
+        {
+            using (FolderBrowserDialog fbd = new FolderBrowserDialog())
+            {
+                fbd.Description = "Selecione a pasta das suites";
+                if (fbd.ShowDialog() == DialogResult.OK)
+                {
+                    TxtDiretorio.Text = fbd.SelectedPath;
+                    Log($"Diretório definido: {TxtDiretorio.Text}", Color.Cyan);
+                }
+            }
+        }
+
+        // ============ CARREGAR SUITES ============        
         private void btnRunSuite_Click(object sender, EventArgs e)
         {
             lstSuites.Items.Clear();
             lstTests.Items.Clear();
 
-            if (!Directory.Exists(pastaBase))
+            if (string.IsNullOrWhiteSpace(pastaBase) || !Directory.Exists(pastaBase))
             {
                 Log("Pasta base não encontrada", Color.Red);
                 return;
@@ -64,7 +78,7 @@ namespace projeto_autoteste
             Log("Suites carregadas", Color.Cyan);
         }
 
-        // ============ SELEÇÃO DA SUITE ============
+        // ============ SELEÇÃO DA SUITE ============        
         private void lstSuites_SelectedIndexChanged(object sender, EventArgs e)
         {
             lstTests.Items.Clear();
@@ -83,7 +97,7 @@ namespace projeto_autoteste
             Log($"Suite selecionada: {suite}", Color.LightBlue);
         }
 
-        // ============ EXECUTAR TESTE ÚNICO ============
+        // ============ EXECUTAR TESTE ÚNICO ============        
         private void btnRunTest_Click(object sender, EventArgs e)
         {
             if (lstSuites.SelectedItem == null || lstTests.SelectedItem == null)
@@ -92,13 +106,10 @@ namespace projeto_autoteste
                 return;
             }
 
-            ExecutarTeste(
-                lstSuites.SelectedItem.ToString(),
-                lstTests.SelectedItem.ToString()
-            );
+            ExecutarTeste(lstSuites.SelectedItem.ToString(), lstTests.SelectedItem.ToString());
         }
 
-        // ============ EXECUTAR SUITE COMPLETA ============
+        // ============ EXECUTAR SUITE COMPLETA ============        
         private void btnRunAll_Click(object sender, EventArgs e)
         {
             if (lstSuites.SelectedItem == null)
@@ -120,7 +131,6 @@ namespace projeto_autoteste
             foreach (var script in scripts)
             {
                 string nomeTeste = Path.GetFileName(script);
-
                 bool resultado = ExecutarTeste(suite, nomeTeste);
 
                 if (resultado)
@@ -136,12 +146,18 @@ namespace projeto_autoteste
             Log("==================================", Color.White);
         }
 
-        // ============ MÉTODO CENTRAL DE EXECUÇÃO ============
+        // ============ MÉTODO CENTRAL DE EXECUÇÃO ============        
         private bool ExecutarTeste(string suite, string teste)
         {
             if (!File.Exists(autoItExe))
             {
                 Log("AutoIt3.exe não encontrado", Color.Red);
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(pastaBase) || !Directory.Exists(pastaBase))
+            {
+                Log("Diretório da suite inválido", Color.Red);
                 return false;
             }
 
