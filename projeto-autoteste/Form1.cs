@@ -201,5 +201,10 @@ namespace projeto_autoteste
         private void groupBox2_Enter(object sender, EventArgs e) { }
         private void listBox1_SelectedIndexChanged_1(object sender, EventArgs e) { }
         private void Form1_Load(object sender, EventArgs e) { }
+
+        private void label2_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }
